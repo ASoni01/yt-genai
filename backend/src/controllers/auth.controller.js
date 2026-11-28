@@ -1,4 +1,5 @@
 import { userModel } from "../models/user.model.js";
+import { tokenBlackiListModel } from "../models/blacklist.model.js";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 
@@ -82,10 +83,28 @@ export async function loginUserController(req, res) {
     maxAge: 24 * 60 * 60 * 1000,
   });
 
-   res
+  res.status(200).json({
+    message: "User logged in successfully",
+    user: { id: user._id, username: user.username, email: user.email },
+  });
+}
+
+export async function logoutUserController(req, res) {
+  const token = req.cookies.token;
+
+  if (token) {
+    await tokenBlackiListModel.create({ token });
+  }
+  res.clearCookie("token");
+  res.status(200).json({ message: "User logged out successfully" });
+}
+
+export async function getMeUserController(req, res) {
+  const user = await userModel.findById(req.user.id);
+  res
     .status(200)
     .json({
-      message: "User logged in successfully",
+      message: "User fetched successfully",
       user: { id: user._id, username: user.username, email: user.email },
     });
 }
